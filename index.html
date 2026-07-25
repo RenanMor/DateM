@@ -2,36 +2,47 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interação Romântica</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Uma mensagem rápida pra você ✨</title>
+    <!-- Fonts Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --cor-fundo: #ff4d4d;
-            --cor-cartao: #4a2c2a;
-            --cor-botao: #ff6b6b;
-            --cor-texto: #ffffff;
-            --fonte-principal: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --bg-gradient: radial-gradient(circle at 50% 15%, #2e1065 0%, #0f172a 70%, #050b14 100%);
+            --card-bg: rgba(255, 255, 255, 0.06);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --primary-accent: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #f43f5e 100%);
+            --btn-glow: rgba(236, 72, 153, 0.4);
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--cor-fundo);
-            font-family: var(--fonte-principal);
+            background: var(--bg-gradient);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
             overflow: hidden;
-            color: var(--cor-texto);
+            color: var(--text-main);
+            position: relative;
         }
 
-        /* Efeito de corações flutuando ao fundo */
-        .coracoes-bg {
+        /* Partículas / Brilhos no fundo */
+        .ambient-bg {
             position: fixed;
             top: 0;
             left: 0;
@@ -39,255 +50,606 @@
             height: 100%;
             pointer-events: none;
             z-index: 0;
+            overflow: hidden;
         }
 
-        .coracao {
+        .sparkle {
             position: absolute;
-            font-size: 20px;
-            color: rgba(0, 0, 0, 0.3);
-            animation: flutuar 5s linear infinite;
-            opacity: 0.6;
+            font-size: 1.2rem;
+            opacity: 0.7;
+            animation: floatSparkle 6s linear infinite;
+            filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.6));
         }
 
-        @keyframes flutuar {
-            0% { transform: translateY(100vh) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        @keyframes floatSparkle {
+            0% {
+                transform: translateY(105vh) rotate(0deg) scale(0.8);
+                opacity: 0;
+            }
+            20% { opacity: 0.8; }
+            80% { opacity: 0.8; }
+            100% {
+                transform: translateY(-10vh) rotate(360deg) scale(1.2);
+                opacity: 0;
+            }
         }
 
-        /* Container simulando um celular */
-        .container {
+        /* Canvas de Confete */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 99;
+        }
+
+        /* Container Principal */
+        .app-container {
             position: relative;
-            z-index: 1;
-            width: 90%;
-            max-width: 350px;
-            height: 600px;
+            z-index: 10;
+            width: 92%;
+            max-width: 400px;
+            padding: 24px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 20px;
         }
 
-        /* Emoji centralizado */
-        .emoji-display {
-            font-size: 120px;
-            margin-bottom: 30px;
-            transition: transform 0.3s ease;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
-        }
-
-        .emoji-display:hover {
-            transform: scale(1.1);
-        }
-
-        /* Cartão de pergunta */
-        .cartao-pergunta {
-            background-color: var(--cor-cartao);
-            padding: 25px;
-            border-radius: 25px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        /* Card com Efeito Glassmorphism */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            padding: 32px 24px;
             width: 100%;
-            animation: aparecer 0.5s ease-out;
-        }
-
-        @keyframes aparecer {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        h1 {
-            font-size: 22px;
-            margin-bottom: 25px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            line-height: 1.4;
-        }
-
-        .botoes {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
             position: relative;
         }
 
-        button {
-            padding: 12px 30px;
-            border: none;
+        .glass-card.animate-swap {
+            animation: cardSwap 0.4s ease-out forwards;
+        }
+
+        @keyframes cardSwap {
+            0% { opacity: 0; transform: scale(0.92) translateY(15px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Tag de notificação */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.3);
             border-radius: 50px;
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #d8b4fe;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Emoji central animado */
+        .emoji-wrapper {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            display: inline-block;
+            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
+            animation: pulseEmoji 3s ease-in-out infinite;
+        }
+
+        @keyframes pulseEmoji {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        /* Título e Texto */
+        h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            line-height: 1.4;
+            margin-bottom: 12px;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .highlight-text {
+            background: linear-gradient(135deg, #c084fc, #f472b6, #fb7185);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.description {
+            font-size: 0.98rem;
+            color: var(--text-muted);
+            line-height: 1.55;
+            margin-bottom: 24px;
+            font-weight: 400;
+        }
+
+        /* Botões de Ação */
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            position: relative;
+            min-height: 52px;
+        }
+
+        .actions.horizontal {
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border-radius: 50px;
+            font-family: var(--font-family);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary-accent);
+            color: #ffffff;
+            box-shadow: 0 8px 20px var(--btn-glow);
+        }
+
+        .btn-primary:hover, .btn-primary:active {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 12px 25px rgba(236, 72, 153, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        /* Estilo das opções em formato de lista (Passo 3) */
+        .option-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .option-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 16px;
+            border-radius: 16px;
+            color: var(--text-main);
+            font-size: 0.92rem;
+            font-weight: 500;
+            text-align: left;
             cursor: pointer;
             transition: all 0.2s ease;
-            text-transform: uppercase;
-            min-width: 100px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .btn-sim {
-            background-color: var(--cor-botao);
-            color: white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        .option-item:hover, .option-item:active {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: rgba(168, 85, 247, 0.4);
+            transform: translateX(4px);
         }
 
-        .btn-sim:hover {
-            transform: scale(1.1);
-            filter: brightness(1.1);
+        /* Toast flutuante de provocação */
+        .tease-toast {
+            position: absolute;
+            top: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(244, 114, 182, 0.5);
+            color: #f472b6;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            pointer-events: none;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 30;
         }
 
-        .btn-nao {
-            background-color: #f1f1f1;
-            color: #333;
-            position: relative;
+        .tease-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
         }
 
-        /* Estilo para a cena final */
-        .final-msg {
-            display: none;
-            font-size: 24px;
-            font-weight: bold;
+        /* Rodapé com créditos elegantes */
+        .footer-note {
+            margin-top: 20px;
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.4);
+            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            justify-content: center;
         }
     </style>
 </head>
 <body>
 
-    <div class="coracoes-bg" id="coracoes"></div>
+    <!-- Fundo dinâmico com brilhos -->
+    <div class="ambient-bg" id="sparklesBg"></div>
 
-    <div class="container">
-        <div class="emoji-display" id="emoji">🥺</div>
-        
-        <div class="cartao-pergunta" id="conteudo">
-            <h1 id="pergunta">test</h1>
-            <div class="botoes">
-                <button class="btn-sim" onclick="proximaInteracao('sim')">SIM</button>
-                <button class="btn-nao" id="btnNao" onmouseover="fugirBotao()" onclick="proximaInteracao('nao')">NÃO</button>
+    <!-- Canvas para efeito de celebração no final -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <div class="app-container">
+        <!-- Toast de provocação quando o botão fugir -->
+        <div class="tease-toast" id="teaseToast">Opção bloqueada! 😉</div>
+
+        <!-- Card Principal -->
+        <div class="glass-card" id="mainCard">
+            <div class="badge" id="cardBadge">
+                <span id="badgeIcon">💬</span> <span id="badgeText">Notificação Especial</span>
             </div>
+
+            <div class="emoji-wrapper" id="cardEmoji">✨</div>
+
+            <h1 id="cardTitle">Passei aqui só pra te fazer um elogio rápido sem compromisso. <span class="highlight-text">Aceita?</span></h1>
+            
+            <p class="description" id="cardDescription">
+                Prometo que é algo leve pra deixar seu dia pelo menos 10% melhor! 😉
+            </p>
+
+            <!-- Área de Botões / Opções -->
+            <div id="cardContentArea">
+                <div class="actions horizontal" id="actionsContainer">
+                    <button class="btn btn-primary" id="btnSim" onclick="handleSim()">Com certeza! ✨</button>
+                    <button class="btn btn-secondary" id="btnNao">Não...</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            <span>Enviado com intenções leves & boa vibe ✨</span>
         </div>
     </div>
 
     <script>
-        // ============================================================
-        // ELEMENTOS PARA ALTERAÇÃO (PERSONALIZE AQUI)
-        // ============================================================
-        const configuracao = {
-            // Sequência de interações
-            interacoes: [
-                {
-                    emoji: "🥺",
-                    pergunta: "test 1: você aceitaria ir a um date comigo?",
-                    sim_proximo: 1, // vai para a interação de índice 1
-                    nao_proximo: 0  // se clicar não, permanece ou repete (o botão foge neste exemplo)
-                },
-                {
-                    emoji: "🥰",
-                    pergunta: "test 2: sério mesmo? você me faz muito feliz!",
-                    sim_proximo: 2,
-                    nao_proximo: 0
-                },
-                {
-                    emoji: "💖",
-                    pergunta: "test final: mal posso esperar por esse dia!",
-                    final: true // indica que é a última tela
-                }
-            ],
-            
-            // Texto dos botões (caso queira mudar)
-            textoBotaoSim: "SIM",
-            textoBotaoNao: "NÃO"
+        // =========================================================================
+        // CONFIGURAÇÃO FÁCIL (PERSONALIZE AQUI SEUS LINKS E DADOS)
+        // =========================================================================
+        const config = {
+            whatsappLink: "https://wa.me/5514996215752?text=Oii,%20aceitei%20vir%20aqui%20%F0%9F%A4%AD"
         };
-        // ============================================================
+        // =========================================================================
 
-        let indiceAtual = 0;
+        let currentStep = 1;
+        let runawayAttempts = 0;
 
-        function carregarInteracao() {
-            const dados = configuracao.interacoes[indiceAtual];
-            const perguntaEl = document.getElementById('pergunta');
-            const emojiEl = document.getElementById('emoji');
-            const botoesEl = document.querySelector('.botoes');
+        const teaseMessages = [
+            "Não vale tentar clicar! 😂",
+            "Opa, botão arisco! 🚀",
+            "Errou por pouco! 😉",
+            "Tenta a outra opção... ✨",
+            "Sem chance de recusar um bom astral! 💫"
+        ];
 
-            // Atualiza texto e emoji
-            perguntaEl.innerText = dados.pergunta;
-            emojiEl.innerText = dados.emoji;
+        // Passos da Interação
+        function renderStep(step) {
+            currentStep = step;
+            const card = document.getElementById('mainCard');
+            const badgeIcon = document.getElementById('badgeIcon');
+            const badgeText = document.getElementById('badgeText');
+            const cardEmoji = document.getElementById('cardEmoji');
+            const cardTitle = document.getElementById('cardTitle');
+            const cardDesc = document.getElementById('cardDescription');
+            const contentArea = document.getElementById('cardContentArea');
 
-            // Se for a última interação, esconde os botões
-            if (dados.final) {
-                botoesEl.style.display = 'none';
-                lancarMuitosCoracoes();
-            } else {
-                botoesEl.style.display = 'flex';
-                resetarBotaoNao();
+            // Trigger animação de troca
+            card.classList.remove('animate-swap');
+            void card.offsetWidth; // Reflow
+            card.classList.add('animate-swap');
+
+            if (step === 2) {
+                // Passo 2: O Elogio Sincero
+                badgeIcon.innerText = "🌟";
+                badgeText.innerText = "Boost de Astral";
+                cardEmoji.innerText = "😊";
+                cardTitle.innerHTML = `Sua energia passa um <span class="highlight-text">astral tão leve</span> que seria um crime não dizer!`;
+                cardDesc.innerText = `Pessoas com o seu sorriso e estilo merecem ter o dia iluminado. Dizem que elogio sincero traz sorte... Consegui tirar pelo menos um sorrisinho daí?`;
+                
+                contentArea.innerHTML = `
+                    <div class="actions horizontal">
+                        <button class="btn btn-primary" onclick="renderStep(3)">Com certeza! 😊</button>
+                        <button class="btn btn-secondary" onclick="renderStep(3)">Sorri sim! ✨</button>
+                    </div>
+                `;
+            } 
+            else if (step === 3) {
+                // Passo 3: Quiz Vibe Check
+                badgeIcon.innerText = "🎯";
+                badgeText.innerText = "Vibe Check";
+                cardEmoji.innerText = "👀";
+                cardTitle.innerHTML = `Agora uma pergunta rápida: <span class="highlight-text">Qual a sua vibe hoje?</span>`;
+                cardDesc.innerText = `Escolha uma opção para sabermos se o destino acertou:`;
+
+                contentArea.innerHTML = `
+                    <div class="option-list">
+                        <div class="option-item" onclick="selectOption('Tomar um café e me contar como tá sendo seu dia')">
+                            <span>☕</span> <span>Pronta(o) pra tomar um café e me contar do seu dia</span>
+                        </div>
+                        <div class="option-item" onclick="selectOption('Continuar sorrindo com essa surpresa')">
+                            <span>✨</span> <span>Continuar sorrindo com essa surpresa boa</span>
+                        </div>
+                        <div class="option-item" onclick="selectOption('Aceitar a sintonia e trocar uma ideia')">
+                            <span>💬</span> <span>Aceitar a sintonia e ver no que dá</span>
+                        </div>
+                    </div>
+                `;
+            }
+            else if (step === 4) {
+                // Passo 4: O Convite Carismático
+                badgeIcon.innerText = "🤝";
+                badgeText.innerText = "Próximo Passo";
+                cardEmoji.innerText = "😉";
+                cardTitle.innerHTML = `Acho que a sintonia bateu! <span class="highlight-text">Que tal continuarmos essa conversa?</span>`;
+                cardDesc.innerText = `Prometo manter a boa energia no WhatsApp sem qualquer pressão. Bora ver no que dá?`;
+
+                contentArea.innerHTML = `
+                    <div class="actions horizontal" id="actionsStep4">
+                        <button class="btn btn-primary" onclick="renderStep(5)">Bora conversar! 🚀</button>
+                        <button class="btn btn-secondary" id="btnNaoStep4">Agora não...</button>
+                    </div>
+                `;
+
+                setTimeout(setupRunawayBtnStep4, 50);
+            }
+            else if (step === 5) {
+                // Passo 5: Tela Final & CTA WhatsApp
+                badgeIcon.innerText = "🎉";
+                badgeText.innerText = "Sintonia Confirmada!";
+                cardEmoji.innerText = "🥳";
+                cardTitle.innerHTML = `Pronto! Seu dia oficialmente ganhou um <span class="highlight-text">boost de boas energias</span> ✨`;
+                cardDesc.innerText = `Estou te esperando no WhatsApp pra continuarmos essa conversa de forma leve! Clica no botão abaixo:`;
+
+                contentArea.innerHTML = `
+                    <div class="actions">
+                        <a href="${config.whatsappLink}" target="_blank" class="btn btn-primary">
+                            💬 Chamar no WhatsApp
+                        </a>
+                        <button class="btn btn-secondary" style="font-size: 0.85rem; padding: 10px;" onclick="renderStep(1)">
+                            🔄 Ver novamente
+                        </button>
+                    </div>
+                `;
+
+                launchConfetti();
             }
         }
 
-        function proximaInteracao(resposta) {
-            const dados = configuracao.interacoes[indiceAtual];
-            
-            if (resposta === 'sim') {
-                indiceAtual = dados.sim_proximo;
-            } else {
-                // No caso do "não", podemos ir para outra tela ou apenas brincar
-                // Aqui configurado para seguir o nao_proximo definido
-                indiceAtual = dados.nao_proximo;
-            }
-            
-            // Adiciona um pequeno efeito de transição
-            const cartao = document.getElementById('conteudo');
-            cartao.style.animation = 'none';
-            cartao.offsetHeight; // trigger reflow
-            cartao.style.animation = 'aparecer 0.5s ease-out';
-
-            carregarInteracao();
+        function handleSim() {
+            renderStep(2);
         }
 
-        // Função carismática para o botão "Não" fugir
-        function fugirBotao() {
+        function selectOption(optionText) {
+            renderStep(4);
+        }
+
+        // =========================================================================
+        // SISTEMA DO BOTÃO FUGITIVO (SUPER RÁPIDO AO APROXIMAR O MOUSE / TOUCH)
+        // =========================================================================
+        function setupRunawayBtn() {
             const btnNao = document.getElementById('btnNao');
-            const container = document.querySelector('.container');
-            
-            // Gera posições aleatórias dentro do container
-            const maxX = container.clientWidth - btnNao.clientWidth;
-            const maxY = container.clientHeight - btnNao.clientHeight;
-            
-            const randomX = Math.floor(Math.random() * maxX) - (maxX / 2);
-            const randomY = Math.floor(Math.random() * maxY) - (maxY / 2);
-            
-            btnNao.style.position = 'absolute';
-            btnNao.style.left = randomX + 'px';
-            btnNao.style.top = randomY + 'px';
+            const mainCard = document.getElementById('mainCard');
+            if (!btnNao) return;
+
+            const triggerFlee = (e) => {
+                if (currentStep !== 1) return;
+
+                // Sons/Efeitos Visuais
+                runawayAttempts++;
+                showTeaseToast(teaseMessages[runawayAttempts % teaseMessages.length]);
+
+                // Posição relativa dentro do card
+                const cardRect = mainCard.getBoundingClientRect();
+                const btnRect = btnNao.getBoundingClientRect();
+
+                // Calcula novas coordenadas seguras dentro do card
+                const padding = 20;
+                const maxX = cardRect.width - btnRect.width - padding;
+                const maxY = cardRect.height - btnRect.height - padding;
+
+                let randomX = Math.floor(Math.random() * (maxX - padding)) + padding - (cardRect.width / 2) + (btnRect.width / 2);
+                let randomY = Math.floor(Math.random() * (maxY - padding)) + padding - (cardRect.height / 2) + (btnRect.height / 2);
+
+                btnNao.style.position = 'absolute';
+                btnNao.style.zIndex = '20';
+                btnNao.style.transition = 'all 0.15s ease-out';
+                btnNao.style.left = `${randomX}px`;
+                btnNao.style.top = `${randomY}px`;
+            };
+
+            // Foge no mouseover, mousemove próximo e touchstart
+            btnNao.addEventListener('mouseenter', triggerFlee);
+            btnNao.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                triggerFlee(e);
+            });
+
+            // Medidor de proximidade do mouse
+            document.addEventListener('mousemove', (e) => {
+                if (currentStep !== 1 || !btnNao) return;
+                const rect = btnNao.getBoundingClientRect();
+                const btnCenterX = rect.left + rect.width / 2;
+                const btnCenterY = rect.top + rect.height / 2;
+
+                const dist = Math.hypot(e.clientX - btnCenterX, e.clientY - btnCenterY);
+                if (dist < 80) { // Se o mouse estiver a menos de 80px
+                    triggerFlee(e);
+                }
+            });
         }
 
-        function resetarBotaoNao() {
-            const btnNao = document.getElementById('btnNao');
-            btnNao.style.position = 'relative';
-            btnNao.style.left = '0';
-            btnNao.style.top = '0';
+        function setupRunawayBtnStep4() {
+            const btnNao = document.getElementById('btnNaoStep4');
+            const mainCard = document.getElementById('mainCard');
+            if (!btnNao) return;
+
+            const triggerFlee = (e) => {
+                if (currentStep !== 4) return;
+                runawayAttempts++;
+                showTeaseToast(teaseMessages[runawayAttempts % teaseMessages.length]);
+
+                const cardRect = mainCard.getBoundingClientRect();
+                const btnRect = btnNao.getBoundingClientRect();
+
+                const padding = 20;
+                const maxX = cardRect.width - btnRect.width - padding;
+                const maxY = cardRect.height - btnRect.height - padding;
+
+                let randomX = Math.floor(Math.random() * (maxX - padding)) + padding - (cardRect.width / 2) + (btnRect.width / 2);
+                let randomY = Math.floor(Math.random() * (maxY - padding)) + padding - (cardRect.height / 2) + (btnRect.height / 2);
+
+                btnNao.style.position = 'absolute';
+                btnNao.style.zIndex = '20';
+                btnNao.style.transition = 'all 0.15s ease-out';
+                btnNao.style.left = `${randomX}px`;
+                btnNao.style.top = `${randomY}px`;
+            };
+
+            btnNao.addEventListener('mouseenter', triggerFlee);
+            btnNao.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                triggerFlee(e);
+            });
         }
 
-        // Sistema de corações flutuantes
-        function criarCoracao() {
-            const container = document.getElementById('coracoes');
-            const coracao = document.createElement('div');
-            coracao.className = 'coracao';
-            coracao.innerText = '🖤'; // Você pode mudar para ❤️
-            coracao.style.left = Math.random() * 100 + 'vw';
-            coracao.style.animationDuration = (Math.random() * 3 + 2) + 's';
-            
-            container.appendChild(coracao);
-            
+        function showTeaseToast(msg) {
+            const toast = document.getElementById('teaseToast');
+            toast.innerText = msg;
+            toast.classList.add('show');
             setTimeout(() => {
-                coracao.remove();
-            }, 5000);
+                toast.classList.remove('show');
+            }, 1800);
         }
 
-        function lancarMuitosCoracoes() {
-            for(let i=0; i<50; i++) {
-                setTimeout(criarCoracao, i * 100);
+        // =========================================================================
+        // BRILHOS / SPARKLES FLUTUANTES NO FUNDO
+        // =========================================================================
+        function createAmbientSparkles() {
+            const container = document.getElementById('sparklesBg');
+            const symbols = ['✨', '⭐', '💫', '💖', '🌟'];
+            
+            for (let i = 0; i < 18; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                sparkle.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+                sparkle.style.left = `${Math.random() * 100}vw`;
+                sparkle.style.animationDuration = `${4 + Math.random() * 6}s`;
+                sparkle.style.animationDelay = `${Math.random() * 5}s`;
+                sparkle.style.fontSize = `${0.8 + Math.random() * 0.8}rem`;
+                container.appendChild(sparkle);
             }
         }
 
-        // Inicia o sistema
-        setInterval(criarCoracao, 500);
-        carregarInteracao();
+        // =========================================================================
+        // CANVAS DE CONFETES NA TELA FINAL
+        // =========================================================================
+        function launchConfetti() {
+            const canvas = document.getElementById('confettiCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
 
+            const particles = [];
+            const colors = ['#a855f7', '#ec4899', '#f43f5e', '#38bdf8', '#fbbf24', '#ffffff'];
+
+            for (let i = 0; i < 80; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2 + 50,
+                    vx: (Math.random() - 0.5) * 12,
+                    vy: (Math.random() - 1.2) * 10,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * 360,
+                    rSpeed: (Math.random() - 0.5) * 10,
+                    opacity: 1
+                });
+            }
+
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let stillActive = false;
+
+                particles.forEach(p => {
+                    if (p.opacity <= 0) return;
+                    stillActive = true;
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.25; // gravidade
+                    p.opacity -= 0.012;
+                    p.rotation += p.rSpeed;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.rotation * Math.PI) / 180);
+                    ctx.globalAlpha = Math.max(0, p.opacity);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    ctx.restore();
+                });
+
+                if (stillActive) {
+                    requestAnimationFrame(render);
+                }
+            }
+
+            render();
+        }
+
+        // Inicialização
+        window.addEventListener('load', () => {
+            createAmbientSparkles();
+            setupRunawayBtn();
+        });
+
+        // Ajusta canvas no resizes
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('confettiCanvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
     </script>
 </body>
 </html>
