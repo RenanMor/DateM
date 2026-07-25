@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interação Romântica</title>
+    <style>
+        :root {
+            --cor-fundo: #ff4d4d;
+            --cor-cartao: #4a2c2a;
+            --cor-botao: #ff6b6b;
+            --cor-texto: #ffffff;
+            --fonte-principal: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--cor-fundo);
+            font-family: var(--fonte-principal);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            color: var(--cor-texto);
+        }
+
+        /* Efeito de corações flutuando ao fundo */
+        .coracoes-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .coracao {
+            position: absolute;
+            font-size: 20px;
+            color: rgba(0, 0, 0, 0.3);
+            animation: flutuar 5s linear infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes flutuar {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Container simulando um celular */
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 90%;
+            max-width: 350px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* Emoji centralizado */
+        .emoji-display {
+            font-size: 120px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+        }
+
+        .emoji-display:hover {
+            transform: scale(1.1);
+        }
+
+        /* Cartão de pergunta */
+        .cartao-pergunta {
+            background-color: var(--cor-cartao);
+            padding: 25px;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            width: 100%;
+            animation: aparecer 0.5s ease-out;
+        }
+
+        @keyframes aparecer {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 22px;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            line-height: 1.4;
+        }
+
+        .botoes {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            position: relative;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            min-width: 100px;
+        }
+
+        .btn-sim {
+            background-color: var(--cor-botao);
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .btn-sim:hover {
+            transform: scale(1.1);
+            filter: brightness(1.1);
+        }
+
+        .btn-nao {
+            background-color: #f1f1f1;
+            color: #333;
+            position: relative;
+        }
+
+        /* Estilo para a cena final */
+        .final-msg {
+            display: none;
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="coracoes-bg" id="coracoes"></div>
+
+    <div class="container">
+        <div class="emoji-display" id="emoji">🥺</div>
+        
+        <div class="cartao-pergunta" id="conteudo">
+            <h1 id="pergunta">test</h1>
+            <div class="botoes">
+                <button class="btn-sim" onclick="proximaInteracao('sim')">SIM</button>
+                <button class="btn-nao" id="btnNao" onmouseover="fugirBotao()" onclick="proximaInteracao('nao')">NÃO</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // ELEMENTOS PARA ALTERAÇÃO (PERSONALIZE AQUI)
+        // ============================================================
+        const configuracao = {
+            // Sequência de interações
+            interacoes: [
+                {
+                    emoji: "🥺",
+                    pergunta: "test 1: você aceitaria ir a um date comigo?",
+                    sim_proximo: 1, // vai para a interação de índice 1
+                    nao_proximo: 0  // se clicar não, permanece ou repete (o botão foge neste exemplo)
+                },
+                {
+                    emoji: "🥰",
+                    pergunta: "test 2: sério mesmo? você me faz muito feliz!",
+                    sim_proximo: 2,
+                    nao_proximo: 0
+                },
+                {
+                    emoji: "💖",
+                    pergunta: "test final: mal posso esperar por esse dia!",
+                    final: true // indica que é a última tela
+                }
+            ],
+            
+            // Texto dos botões (caso queira mudar)
+            textoBotaoSim: "SIM",
+            textoBotaoNao: "NÃO"
+        };
+        // ============================================================
+
+        let indiceAtual = 0;
+
+        function carregarInteracao() {
+            const dados = configuracao.interacoes[indiceAtual];
+            const perguntaEl = document.getElementById('pergunta');
+            const emojiEl = document.getElementById('emoji');
+            const botoesEl = document.querySelector('.botoes');
+
+            // Atualiza texto e emoji
+            perguntaEl.innerText = dados.pergunta;
+            emojiEl.innerText = dados.emoji;
+
+            // Se for a última interação, esconde os botões
+            if (dados.final) {
+                botoesEl.style.display = 'none';
+                lancarMuitosCoracoes();
+            } else {
+                botoesEl.style.display = 'flex';
+                resetarBotaoNao();
+            }
+        }
+
+        function proximaInteracao(resposta) {
+            const dados = configuracao.interacoes[indiceAtual];
+            
+            if (resposta === 'sim') {
+                indiceAtual = dados.sim_proximo;
+            } else {
+                // No caso do "não", podemos ir para outra tela ou apenas brincar
+                // Aqui configurado para seguir o nao_proximo definido
+                indiceAtual = dados.nao_proximo;
+            }
+            
+            // Adiciona um pequeno efeito de transição
+            const cartao = document.getElementById('conteudo');
+            cartao.style.animation = 'none';
+            cartao.offsetHeight; // trigger reflow
+            cartao.style.animation = 'aparecer 0.5s ease-out';
+
+            carregarInteracao();
+        }
+
+        // Função carismática para o botão "Não" fugir
+        function fugirBotao() {
+            const btnNao = document.getElementById('btnNao');
+            const container = document.querySelector('.container');
+            
+            // Gera posições aleatórias dentro do container
+            const maxX = container.clientWidth - btnNao.clientWidth;
+            const maxY = container.clientHeight - btnNao.clientHeight;
+            
+            const randomX = Math.floor(Math.random() * maxX) - (maxX / 2);
+            const randomY = Math.floor(Math.random() * maxY) - (maxY / 2);
+            
+            btnNao.style.position = 'absolute';
+            btnNao.style.left = randomX + 'px';
+            btnNao.style.top = randomY + 'px';
+        }
+
+        function resetarBotaoNao() {
+            const btnNao = document.getElementById('btnNao');
+            btnNao.style.position = 'relative';
+            btnNao.style.left = '0';
+            btnNao.style.top = '0';
+        }
+
+        // Sistema de corações flutuantes
+        function criarCoracao() {
+            const container = document.getElementById('coracoes');
+            const coracao = document.createElement('div');
+            coracao.className = 'coracao';
+            coracao.innerText = '🖤'; // Você pode mudar para ❤️
+            coracao.style.left = Math.random() * 100 + 'vw';
+            coracao.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            
+            container.appendChild(coracao);
+            
+            setTimeout(() => {
+                coracao.remove();
+            }, 5000);
+        }
+
+        function lancarMuitosCoracoes() {
+            for(let i=0; i<50; i++) {
+                setTimeout(criarCoracao, i * 100);
+            }
+        }
+
+        // Inicia o sistema
+        setInterval(criarCoracao, 500);
+        carregarInteracao();
+
+    </script>
+</body>
+</html>
